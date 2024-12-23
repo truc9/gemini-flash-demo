@@ -2,10 +2,12 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useState } from "react";
+import { BeatLoader } from "react-spinners";
 import { remark } from "remark";
 import html from "remark-html";
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const genAI = new GoogleGenerativeAI(
     process.env.NEXT_PUBLIC_GEMINI_FLASH_KEY!
@@ -20,8 +22,9 @@ export default function Home() {
     }
   };
 
-  const handleUpload = async () => {
+  const handleProcess = async () => {
     if (!selectedFile) return;
+    setLoading(true);
 
     const formData = new FormData();
     formData.append("file", selectedFile);
@@ -38,6 +41,7 @@ export default function Home() {
         "You are a detailed image analyst. Given the image, provide a comprehensive and thorough description of its contents, including any notable features, objects, and context. Make it in Vietnamese.",
       ]);
       let text = "";
+      setLoading(false);
       for await (const item of res.stream) {
         text += item.text();
         const processedContent = await remark().use(html).process(text);
@@ -46,6 +50,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,13 +67,18 @@ export default function Home() {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
             />
             <button
-              onClick={handleUpload}
+              onClick={handleProcess}
               className="w-full px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-transform transform active:scale-95"
             >
               Process
             </button>
           </div>
           <div className="w-full md:w-2/3">
+            {loading && (
+              <div className="flex justify-center items-center">
+                <BeatLoader />
+              </div>
+            )}
             {htmlContent && (
               <div className="mt-6 md:mt-0 p-4 bg-gray-50 rounded-lg shadow-inner">
                 <div className="prose">
