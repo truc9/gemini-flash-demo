@@ -52,9 +52,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-3xl font-bold text-center mb-6">
-          What in the image?
-        </h2>
+        <h2 className="text-3xl font-bold text-center mb-6">Visionary</h2>
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex flex-col items-center w-full md:w-1/3">
             <input
