@@ -1,8 +1,9 @@
 "use client";
 
+import UploadPreview from "@/components/upload-preview";
+import prompt from "@/prompts";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BeatLoader } from "react-spinners";
 import { remark } from "remark";
 import html from "remark-html";
@@ -10,6 +11,9 @@ import html from "remark-html";
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const imageUrl = useMemo(() => {
+    return selectedFile ? URL.createObjectURL(selectedFile) : "";
+  }, [selectedFile]);
   const genAI = new GoogleGenerativeAI(
     process.env.NEXT_PUBLIC_GEMINI_FLASH_KEY!
   );
@@ -26,6 +30,7 @@ export default function Home() {
   const handleAnalyse = async () => {
     if (!selectedFile) return;
     setLoading(true);
+    setHtmlContent("");
 
     const formData = new FormData();
     formData.append("file", selectedFile);
@@ -39,7 +44,7 @@ export default function Home() {
             mimeType: "image/jpeg",
           },
         },
-        "You are a detailed image analyst. Given the image, provide a comprehensive and thorough description of its contents, including any notable features, objects, and context. Make it in Vietnamese.",
+        prompt,
       ]);
       let text = "";
       setLoading(false);
@@ -57,9 +62,11 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-3xl font-bold text-center mb-6">Visionary</h2>
+    <div className="flex flex-col items-center justify-start min-h-screen p-6">
+      <div className="w-full max-w-4xl p-6">
+        <div className="mb-10">
+          <h2 className="text-3xl font-bold text-center">Visionary</h2>
+        </div>
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex flex-col items-center w-full md:w-1/3 gap-5">
             <input
@@ -67,35 +74,23 @@ export default function Home() {
               onChange={handleFileChange}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
             />
-            {selectedFile && (
-              <div className="w-full">
-                <Image
-                  width={300}
-                  height={300}
-                  src={URL.createObjectURL(selectedFile)}
-                  alt="Selected file preview"
-                  className="w-full h-auto rounded-lg shadow-md"
-                />
-              </div>
-            )}
+            {selectedFile && <UploadPreview url={imageUrl} />}
             <button
               onClick={handleAnalyse}
-              className="w-full px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-transform transform active:scale-95"
+              className="w-full px-4 py-2 text-white bg-emerald-500 rounded-lg hover:bg-emerald-600 transition-transform transform active:scale-95"
             >
               Analyse
             </button>
           </div>
-          <div className="w-full md:w-2/3">
+          <div className="w-full md:w-2/3 mt-6 md:mt-0 p-4 bg-gray-50 rounded-lg shadow-inner max-h-[700px] overflow-y-auto">
             {loading && (
-              <div className="flex justify-center items-center">
+              <div className="flex h-full justify-center flex-col items-center">
                 <BeatLoader />
               </div>
             )}
             {htmlContent && (
-              <div className="mt-6 md:mt-0 p-4 bg-gray-50 rounded-lg shadow-inner">
-                <div className="prose">
-                  <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-                </div>
+              <div className="prose">
+                <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
               </div>
             )}
           </div>
